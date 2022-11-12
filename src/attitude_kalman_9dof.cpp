@@ -17,11 +17,11 @@ Eigen::Vector<float, 3> AttitudeKalman9Dof::chart(Eigen::Quaternionf q){
 }
 
 
-RotationalState AttitudeKalman9Dof::step(Eigen::Vector<float, 9> measurement, float dt){    
+RotationalState AttitudeKalman9Dof::step(Eigen::Vector<float, 9> measurement, Eigen::Vector<float, 3> expected_worldframe_acceleration_disturbance, float dt){    
 
     PredictState(dt);
 
-    PredictMeasurement();
+    PredictMeasurement(expected_worldframe_acceleration_disturbance);
 
     updateEstimate(measurement);
 
@@ -55,20 +55,20 @@ void AttitudeKalman9Dof::PredictState(float dt){
 }
 
 
-void AttitudeKalman9Dof::PredictMeasurement(){
+void AttitudeKalman9Dof::PredictMeasurement(Eigen::Vector<float, 3> expected_acc_disturbance){
 
     // this is used a lot, just grab it now
     const auto predicted_rotation_matrix = current_prediction_.attitude.toRotationMatrix();
 
-    // predict the measurements based on our current predicted attitude
-    const auto expected_acc_data = Eigen::Vector<float, 3>((expected_acc_disturbance_ + world_frame_acc_).transpose() * predicted_rotation_matrix);
-    const auto expected_mag_data = Eigen::Vector<float, 3>((expected_mag_disturbance_ + world_frame_mag_).transpose() * predicted_rotation_matrix);
+    // predict the measurements based on our current predicted attitude and normalize them
+    const Eigen::Vector<float, 3> expected_gravity_vector = Eigen::Vector<float, 3>((expected_acc_disturbance + world_frame_acc_).transpose() * predicted_rotation_matrix).normalized()*10;
+    const Eigen::Vector<float, 3> expected_mag_data = Eigen::Vector<float, 3>((expected_mag_disturbance_ + world_frame_mag_).transpose() * predicted_rotation_matrix).normalized()*10;
     const auto expected_gyro_data = current_prediction_.angular_velocity;
 
-    expected_measurement_ << expected_acc_data, expected_mag_data, expected_gyro_data;
+    expected_measurement_ << expected_gravity_vector, expected_mag_data, expected_gyro_data;
 
     // H transforms State -> measurement frame
-    H_ << crossProdMat(expected_acc_data),  Eigen::Matrix<float, 3, 3>::Zero(), crossProdMat(expected_mag_data), Eigen::Matrix<float, 3, 3>::Zero(),  Eigen::Matrix<float, 3, 3>::Zero(), Eigen::Matrix<float, 3, 3>::Identity();
+    H_ << crossProdMat(expected_gravity_vector),  Eigen::Matrix<float, 3, 3>::Zero(), crossProdMat(expected_mag_data), Eigen::Matrix<float, 3, 3>::Zero(),  Eigen::Matrix<float, 3, 3>::Zero(), Eigen::Matrix<float, 3, 3>::Identity();
 
     Eigen::Matrix<float, 9, 9> N;
 
@@ -88,7 +88,12 @@ void AttitudeKalman9Dof::updateEstimate(Eigen::Vector<float, 9> measurement){
     K_ = P_ * H_.transpose() * S_.inverse();
 
     // set up the euclidian estimate "centered at our current attitude" i.e (0, w)
-    euclidian_estimate_ << Eigen::Vector<float, 3>::Zero(), current_estimate_.angular_velocity;
+    euclidian_estimate_ << Eigen::Vector<float, 3>::Zero(), current_prediction_.angular_velocity;
+
+    // normalize the accelerometer measurement
+    measurement.head(3) = (measurement.head(3)).normalized()*10.0;
+    // normalize the mag measurement 
+    measurement.block<3, 1>(3, 0) = measurement.block<3, 1>(3, 0).normalized()*10.0;
 
     // update the euclidian state based on measurement residual
     euclidian_estimate_ = euclidian_estimate_ + K_*(measurement - expected_measurement_);
