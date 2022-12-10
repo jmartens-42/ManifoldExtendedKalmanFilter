@@ -19,7 +19,7 @@ public:
     // measaurement: Eigen::Vector of accelerometer, magnetometer, gyro data
     // expected_worldframe_acceleration_deviation, a prediction of how much external acceleration is contributing to the acceleration measurement (in world frame!)
     // dt: seconds between this step and the last
-    RotationalState step(Eigen::Vector<float, 9> measurement, Eigen::Vector<float, 3> expected_worldframe_acceleration_deviation, float dt);
+    RotationalState step(const Eigen::Vector<float, 9>& measurement, const Eigen::Vector<float, 3>& expected_worldframe_acceleration_deviation, float dt);
 
 
 private:
@@ -31,8 +31,8 @@ private:
     Eigen::Vector<float, 3> chart(Eigen::Quaternionf q);
 
     void PredictState(float dt);
-    void PredictMeasurement(Eigen::Vector<float, 3> expected_acc_disturbance);
-    void updateEstimate(Eigen::Vector<float, 9> measurement);
+    void PredictMeasurement(const Eigen::Vector<float, 3>& expected_acc_disturbance);
+    void updateEstimate(const Eigen::Vector<float, 9>& measurement);
 
 
     Eigen::Matrix<float, 6, 6> P_ = Eigen::Matrix<float, 6, 6>::Identity()*10; //state covariance matrix
