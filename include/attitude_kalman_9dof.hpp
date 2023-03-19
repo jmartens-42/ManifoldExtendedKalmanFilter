@@ -15,12 +15,44 @@ public:
 
     }
 
+    void finishMagCal(){
+        cal_step_ = CalibrationStep::SensorBaseline;
+    }
+
+    void setParameter(const Parameter& p){
+
+        switch(p.parm_id){
+
+            case 1:
+                Q_w_ = Eigen::Matrix<float, 3, 3>::Identity()*p.parm_val;
+                break;
+            case 2:
+                Q_a_m_ = Eigen::Matrix<float, 3, 3>::Identity()*p.parm_val;
+                break;
+            case 3:
+                Q_m_m_ = Eigen::Matrix<float, 3, 3>::Identity()*p.parm_val;
+                break;
+            case 4:
+                R_w_ = Eigen::Matrix<float, 3, 3>::Identity()*p.parm_val;
+                break;
+            case 5:
+                R_a_m_ = Eigen::Matrix<float, 3, 3>::Identity()*p.parm_val;
+                break;
+            case 6:
+                R_m_m_ = Eigen::Matrix<float, 3, 3>::Identity()*p.parm_val;
+                break;
+            default:
+                break;
+        }
+    }
+
     // returns a new estimate of the current attitude and angular velocity
     // measaurement: Eigen::Vector of accelerometer, magnetometer, gyro data
     // expected_worldframe_acceleration_deviation, a prediction of how much external acceleration is contributing to the acceleration measurement (in world frame!)
     // dt: seconds between this step and the last
     RotationalState step(const Eigen::Vector<float, 9>& measurement, const Eigen::Vector<float, 3>& expected_worldframe_acceleration_deviation, float dt);
 
+    Eigen::Vector<float, 9> expected_measurement_ = Eigen::Vector<float, 9>::Zero(); // storage for the expected measurement in the predictMeasurement step
 
 private:
 
@@ -42,19 +74,25 @@ private:
     Eigen::Matrix<float, 9, 9> S_ = Eigen::Matrix<float, 9, 9>::Zero(); // measurement covariance matrix
     Eigen::Matrix<float, 6, 9> K_ = Eigen::Matrix<float, 6, 9>::Zero(); // Kalman gain matrix 
 
-    Eigen::Matrix<float, 3, 3> Q_w_ = Eigen::Matrix<float, 3, 3>::Identity()*0.1; //process covariance
-    Eigen::Matrix<float, 3, 3> Q_a_m_ = Eigen::Matrix<float, 3, 3>::Identity()*0.5; //covariance representing external disturbances
-    Eigen::Matrix<float, 3, 3> Q_m_m_ = Eigen::Matrix<float, 3, 3>::Identity()*0.5; //covariance representing external disturbances
+    Eigen::Matrix<float, 3, 3> Q_w_ = Eigen::Matrix<float, 3, 3>::Identity()*0.05; //process covariance
+    Eigen::Matrix<float, 3, 3> Q_a_m_ = Eigen::Matrix<float, 3, 3>::Identity()*0.05; //covariance representing external disturbances
+    Eigen::Matrix<float, 3, 3> Q_m_m_ = Eigen::Matrix<float, 3, 3>::Identity()*0.05; //covariance representing external disturbances
 
-    Eigen::Matrix<float, 3, 3> R_w_ = Eigen::Matrix<float, 3, 3>::Identity()*0.85; //gyro measurement noise covariance
-    Eigen::Matrix<float, 3, 3> R_a_m_ = Eigen::Matrix<float, 3, 3>::Identity()*0.1; // accelerometer measurement noise covariance
-    Eigen::Matrix<float, 3, 3> R_m_m_ = Eigen::Matrix<float, 3, 3>::Identity()*2; // magnet measurement noise covariance
+    Eigen::Matrix<float, 3, 3> R_w_ = Eigen::Matrix<float, 3, 3>::Identity()*5; //gyro measurement noise covariance
+    Eigen::Matrix<float, 3, 3> R_a_m_ = Eigen::Matrix<float, 3, 3>::Identity()*0.001; // accelerometer measurement noise covariance
+    Eigen::Matrix<float, 3, 3> R_m_m_ = Eigen::Matrix<float, 3, 3>::Identity()*0.001; // magnet measurement noise covariance
 
     Eigen::Vector<float, 3> world_frame_acc_ = Eigen::Vector<float, 3>({0, 0, 9.81}); // this is what measurement predictions are made off of
     Eigen::Vector<float, 3> gyro_bias_ = Eigen::Vector<float, 3>::Zero();
     Eigen::Vector<float, 3> world_frame_mag_ = Eigen::Vector<float, 3>(28.71, 0.3, -53.83); // this is what measurement predictions are made off of
 
-    Eigen::Matrix<float, 3, 3> accel_to_mag_frame_rot = Eigen::AngleAxisf(3.1415, Eigen::Vector3f::UnitX()).toRotationMatrix();
+
+    // 1.024074 0.941677 1.039962 -7.626575 -4.710533 -10.093996
+    // 1.061158 0.904137 1.050855 -5.233925 12.411877 11.888485
+    Eigen::Vector<float, 3> mag_offset_{-5.233925, 12.411877, 11.888485};
+    Eigen::Vector<float, 3> mag_scale_{1.061158, 0.904137, 1.050855};
+
+    const Eigen::Matrix<float, 3, 3> accel_to_mag_frame_rot = Eigen::AngleAxisf(3.1415, Eigen::Vector3f::UnitX()).toRotationMatrix();
     
     Eigen::Vector<float, 3> expected_mag_disturbance_ = Eigen::Vector<float, 3>::Zero(); // just zero for now. Not sure how this would get implemented dynamically
     
@@ -63,9 +101,17 @@ private:
 
     bool calibrated_ = false;
 
-    Eigen::Vector<float, 9> expected_measurement_ = Eigen::Vector<float, 9>::Zero(); // storage for the expected measurement in the predictMeasurement step
+
+
 
     Eigen::Vector<float, 6> euclidian_estimate_ = Eigen::Vector<float, 6>::Zero(); // used as the R^3 analog of our attitude and angular velocity measurement
+
+    enum class CalibrationStep{
+        MagHardSoftIron,
+        SensorBaseline,
+        Complete
+    };
+    CalibrationStep cal_step_ = CalibrationStep::SensorBaseline;
 
 
 };

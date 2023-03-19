@@ -9,3 +9,10 @@ struct RotationalState{
     Eigen::Vector<float, 3> angular_velocity = Eigen::Vector<float, 3>(0,0,0);
 
 };
+
+struct Parameter{
+
+    uint16_t parm_id;
+    float parm_val;
+    bool acked = false;
+};

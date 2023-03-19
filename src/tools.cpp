@@ -4,7 +4,7 @@ Eigen::Matrix<float, 3, 3> crossProdMat(const Eigen::Vector<float, 3>& v){
 
     Eigen::Matrix<float, 3, 3> m;
 
-    m << 0, -1*v(2), v(1),
+    m <<    0, -1*v(2), v(1),
             v(2), 0, -1*v(0),
             -1*v(1), v(0), 0;
 
@@ -14,8 +14,9 @@ Eigen::Matrix<float, 3, 3> crossProdMat(const Eigen::Vector<float, 3>& v){
 }
 
 
-Eigen::Quaternionf angularVelocityToRotation(const Eigen::Vector<float, 3>& w, float dt){
+Eigen::Quaternionf angularVelocityToRotation(Eigen::Vector<float, 3> w, float dt){
 
+    w = w * (3.14159/180.0);
     float norm_over_2 = w.norm()*dt*0.5;
     float real_part = cosf(norm_over_2);
     auto vector_part = Eigen::Vector<float, 3>(w.normalized()*sinf(norm_over_2));
