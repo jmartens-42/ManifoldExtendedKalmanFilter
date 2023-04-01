@@ -15,8 +15,12 @@ public:
 
     }
 
-    void finishMagCal(){
-        cal_step_ = CalibrationStep::SensorBaseline;
+    std::string getDebugString(){
+        return std::string() + "expected: " + std::to_string(expected_measurement_[0]) + " " + std::to_string(expected_measurement_[1]) + " " + std::to_string(expected_measurement_[2]) + " " + std::to_string(expected_measurement_.block<3,1>(0,0).norm()) +
+                                " actual: " + std::to_string(normalized_measurement_.block<3, 1>(0, 0)[0]) + " " + std::to_string(normalized_measurement_.block<3, 1>(0, 0)[1]) + " " + std::to_string(normalized_measurement_.block<3, 1>(0, 0)[2]) + " " + std::to_string(normalized_measurement_.block<3, 1>(0, 0).norm()) + 
+                                " expected: " + std::to_string(expected_measurement_[3]) + " " + std::to_string(expected_measurement_[4]) + " " + std::to_string(expected_measurement_[5]) + " " + std::to_string(expected_measurement_.block<3,1>(3,0).norm())+ 
+                                " actual: " + std::to_string(normalized_measurement_.block<3,1>(3, 0)[0]) + " " + std::to_string(normalized_measurement_.block<3,1>(3, 0)[1]) + " " + std::to_string(normalized_measurement_.block<3,1>(3, 0)[2]) + " " + std::to_string(normalized_measurement_.block<3,1>(3, 0).norm()) + "\n\r";
+
     }
 
     void setParameter(const Parameter& p){
@@ -85,19 +89,13 @@ private:
     Eigen::Vector<float, 3> world_frame_acc_ = Eigen::Vector<float, 3>({0, 0, 9.81}); // this is what measurement predictions are made off of
     Eigen::Vector<float, 3> gyro_bias_ = Eigen::Vector<float, 3>::Zero();
     Eigen::Vector<float, 3> world_frame_mag_ = Eigen::Vector<float, 3>(28.71, 0.3, -53.83); // this is what measurement predictions are made off of
-
-
-    // 1.024074 0.941677 1.039962 -7.626575 -4.710533 -10.093996
-    // 1.061158 0.904137 1.050855 -5.233925 12.411877 11.888485
-    Eigen::Vector<float, 3> mag_offset_{-5.233925, 12.411877, 11.888485};
-    Eigen::Vector<float, 3> mag_scale_{1.061158, 0.904137, 1.050855};
-
-    const Eigen::Matrix<float, 3, 3> accel_to_mag_frame_rot = Eigen::AngleAxisf(3.1415, Eigen::Vector3f::UnitX()).toRotationMatrix();
-    
-    Eigen::Vector<float, 3> expected_mag_disturbance_ = Eigen::Vector<float, 3>::Zero(); // just zero for now. Not sure how this would get implemented dynamically
+   
+    const Eigen::Vector<float, 3> expected_mag_disturbance_ = Eigen::Vector<float, 3>::Zero(); // just zero for now. Not sure how this would get implemented dynamically
     
     RotationalState current_prediction_; // used in the step logic
     RotationalState current_estimate_; // actual output
+
+    Eigen::Vector<float, 9> normalized_measurement_;
 
     bool calibrated_ = false;
 
@@ -107,7 +105,6 @@ private:
     Eigen::Vector<float, 6> euclidian_estimate_ = Eigen::Vector<float, 6>::Zero(); // used as the R^3 analog of our attitude and angular velocity measurement
 
     enum class CalibrationStep{
-        MagHardSoftIron,
         SensorBaseline,
         Complete
     };
