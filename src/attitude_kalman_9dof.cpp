@@ -38,17 +38,17 @@ RotationalState AttitudeKalman9Dof::step(const Eigen::Vector<float, 9>& measurem
 void AttitudeKalman9Dof::calibrationStep(const Eigen::Vector<float, 9>& measurement){
 
     static uint32_t sample_count = 0;
-    static Eigen::Vector<float, 3> accel_temp(0,0,0);
-    static Eigen::Vector<float, 3> gyro_temp(0,0,0);
-    static Eigen::Vector<float, 3> mag_temp(0,0,0);
+    static Eigen::Vector<float, 3> accel_temp(Eigen::Vector<float, 3>::Zero());
+    static Eigen::Vector<float, 3> gyro_temp(Eigen::Vector<float, 3>::Zero());
+    static Eigen::Vector<float, 3> mag_temp(Eigen::Vector<float, 3>::Zero());
 
     switch(cal_step_){
 
         case CalibrationStep::SensorBaseline:
 
             accel_temp += measurement.block<3, 1>(0,0).normalized()*10;
-            gyro_temp += measurement.block<3, 1>(6,0);
             mag_temp += measurement.block<3, 1>(3,0).normalized()*10;
+            gyro_temp += measurement.block<3, 1>(6,0);
 
             sample_count++;
             if(sample_count > 50){
@@ -110,7 +110,7 @@ void AttitudeKalman9Dof::PredictMeasurement(const Eigen::Vector<float, 3>& expec
     H_.block<3, 3>(6,3) = Eigen::Matrix<float, 3, 3>::Identity();
 
     // N is matrix representing sensor disturbances and noise (how much do we trust the sensors?)
-    Eigen::Matrix<float, 9, 9> N = Eigen::Matrix<float, 9, 9>::Zero();
+    Eigen::Matrix<float, 9, 9> N(Eigen::Matrix<float, 9, 9>::Zero());
     N.block<3, 3>(0, 0) = predicted_rotation_matrix.transpose() * Q_a_m_ * predicted_rotation_matrix + R_a_m_;
     N.block<3, 3>(3, 3) = predicted_rotation_matrix.transpose() * Q_m_m_ * predicted_rotation_matrix + R_m_m_;
     N.block<3, 3>(6, 6) = R_w_;
@@ -148,5 +148,3 @@ void AttitudeKalman9Dof::updateEstimate(const Eigen::Vector<float, 9>& measureme
     current_estimate_.angular_velocity = euclidian_estimate_.tail<3>(); //normalized_measurement.block<3,1>(6, 0); //euclidian_estimate_.tail<3>(); 
 
 }
-
-
