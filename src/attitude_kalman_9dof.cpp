@@ -1,5 +1,5 @@
-#include "attitude_kalman_9dof.hpp"
-#include "tools.hpp"
+#include <ManifoldExtendedKalmanFilter/attitude_kalman_9dof.hpp>
+#include <ManifoldExtendedKalmanFilter/tools.hpp>
 
 
 Eigen::Quaternionf AttitudeKalman9Dof::inverseChart(const Eigen::Vector<float, 3>& e){
@@ -33,6 +33,14 @@ RotationalState AttitudeKalman9Dof::step(const Eigen::Vector<float, 9>& measurem
 
     return current_estimate_;
 
+}
+
+RotationalState AttitudeKalman9Dof::step(float dt){
+
+    if(calibrated_){
+        PredictState(dt);
+    }
+    return current_prediction_;
 }
 
 void AttitudeKalman9Dof::calibrationStep(const Eigen::Vector<float, 9>& measurement){
@@ -83,7 +91,8 @@ void AttitudeKalman9Dof::PredictState(float dt){
 
     // F rotates P into current prediction frame
     Eigen::Matrix<float, 6, 6> F;
-    F << rotation_estimate.toRotationMatrix().transpose(), (Eigen::Matrix<float, 3, 3>::Identity()*dt), Eigen::Matrix<float, 3, 3>::Zero(), Eigen::Matrix<float, 3, 3>::Identity();
+    F << rotation_estimate.toRotationMatrix().transpose(), (Eigen::Matrix<float, 3, 3>::Identity()*dt), 
+         Eigen::Matrix<float, 3, 3>::Zero(), Eigen::Matrix<float, 3, 3>::Identity();
 
     // Qn is process noise (how much do we trust the prediction?)
     Eigen::Matrix<float, 6, 6> Qn;

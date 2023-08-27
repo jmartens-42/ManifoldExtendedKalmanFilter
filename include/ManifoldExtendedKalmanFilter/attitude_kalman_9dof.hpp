@@ -71,7 +71,7 @@ public:
     // expected_worldframe_acceleration_deviation, a prediction of how much external acceleration is contributing to the acceleration measurement (in world frame!)
     // dt: seconds between this step and the last
     RotationalState step(const Eigen::Vector<float, 9>& measurement, const Eigen::Vector<float, 3>& expected_worldframe_acceleration_deviation, float dt);
-
+    RotationalState step(float dt);
     Eigen::Vector<float, 9> expected_measurement_; // storage for the expected measurement in the predictMeasurement step
 
 private:

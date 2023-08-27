@@ -1,4 +1,4 @@
-#include "tools.hpp"
+#include <ManifoldExtendedKalmanFilter/tools.hpp>
 
 Eigen::Matrix<float, 3, 3> crossProdMat(const Eigen::Vector<float, 3>& v){
 
