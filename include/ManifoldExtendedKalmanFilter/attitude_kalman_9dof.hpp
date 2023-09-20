@@ -31,6 +31,10 @@ public:
 
     }
 
+    void rezero(){
+        calibrated_ = false;
+    }
+
     std::string getDebugString(){
         return std::string() + "expected: " + std::to_string(expected_measurement_[0]) + " " + std::to_string(expected_measurement_[1]) + " " + std::to_string(expected_measurement_[2]) + " " + std::to_string(expected_measurement_.block<3,1>(0,0).norm()) +
                                 " actual: " + std::to_string(normalized_measurement_.block<3, 1>(0, 0)[0]) + " " + std::to_string(normalized_measurement_.block<3, 1>(0, 0)[1]) + " " + std::to_string(normalized_measurement_.block<3, 1>(0, 0)[2]) + " " + std::to_string(normalized_measurement_.block<3, 1>(0, 0).norm()) + 
@@ -94,7 +98,7 @@ private:
     Eigen::Matrix<float, 9, 9> S_; // measurement covariance matrix
     Eigen::Matrix<float, 6, 9> K_; // Kalman gain matrix 
 
-    Eigen::Matrix<float, 3, 3> Q_w_;   //process covariance
+    Eigen::Matrix<float, 3, 3> Q_w_;   //process covariance - how much do we trust the dynamical model
     Eigen::Matrix<float, 3, 3> Q_a_m_; //covariance representing external disturbances
     Eigen::Matrix<float, 3, 3> Q_m_m_; //covariance representing external disturbances
 

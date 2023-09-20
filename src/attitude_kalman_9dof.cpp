@@ -64,10 +64,15 @@ void AttitudeKalman9Dof::calibrationStep(const Eigen::Vector<float, 9>& measurem
                 gyro_bias_ = gyro_temp / 50.0;
                 world_frame_mag_ = mag_temp / 50.0;
                 cal_step_ = CalibrationStep::Complete;
+                sample_count = 0;
             }
 
             break;
         case CalibrationStep::Complete:
+            accel_temp = Eigen::Vector<float, 3>::Zero();
+            gyro_temp = Eigen::Vector<float, 3>::Zero();
+            mag_temp = Eigen::Vector<float, 3>::Zero();
+            cal_step_ = CalibrationStep::SensorBaseline;
             calibrated_ = true;
             break;
         default:
@@ -96,7 +101,7 @@ void AttitudeKalman9Dof::PredictState(float dt){
 
     // Qn is process noise (how much do we trust the prediction?)
     Eigen::Matrix<float, 6, 6> Qn;
-    Qn << Q_w_ * powf(dt, 3) / 3.0, -1*Q_w_ * powf(dt, 3) / 3.0, -1 * Q_w_ * powf(dt, 2) / 2.0, Q_w_ * dt;
+    Qn << Q_w_ * powf(dt, 3.0F) / 3.0F, -1*Q_w_ * powf(dt, 3.0F) / 3.0F, -1.0F * Q_w_ * powf(dt, 2.0F) / 2.0F, Q_w_ * dt;
 
     // Rotate P into new predicted frame
     P_ = F * (P_ + Qn) * F.transpose();
@@ -109,8 +114,8 @@ void AttitudeKalman9Dof::PredictMeasurement(const Eigen::Vector<float, 3>& expec
     const Eigen::Matrix<float, 3, 3> predicted_rotation_matrix = current_prediction_.attitude.toRotationMatrix();
 
     // predict the measurements based on our current predicted attitude and normalize them
-    expected_measurement_.block<3, 1>(0,0) = Eigen::Vector<float, 3>((expected_acc_disturbance + world_frame_acc_).transpose() * predicted_rotation_matrix).normalized()*10;
-    expected_measurement_.block<3, 1>(3,0) = Eigen::Vector<float, 3>((expected_mag_disturbance_ + world_frame_mag_).transpose() * predicted_rotation_matrix ).normalized()*10;
+    expected_measurement_.block<3, 1>(0,0) = Eigen::Vector<float, 3>((expected_acc_disturbance + world_frame_acc_).transpose() * predicted_rotation_matrix).normalized()*10.0F;
+    expected_measurement_.block<3, 1>(3,0) = Eigen::Vector<float, 3>((expected_mag_disturbance_ + world_frame_mag_).transpose() * predicted_rotation_matrix ).normalized()*10.0F;
     expected_measurement_.block<3, 1>(6,0) = current_prediction_.angular_velocity;
 
     // H transforms State -> measurement frame
@@ -138,10 +143,10 @@ void AttitudeKalman9Dof::updateEstimate(const Eigen::Vector<float, 9>& measureme
 
     Eigen::Vector<float, 9> normalized_measurement;
     // normalize the accelerometer measurement
-    normalized_measurement_.block<3, 1>(0, 0) = measurement.block<3, 1>(0, 0).normalized()*10;
+    normalized_measurement_.block<3, 1>(0, 0) = measurement.block<3, 1>(0, 0).normalized()*10.0F;
 
     // normalize the mag measurement 
-    normalized_measurement_.block<3, 1>(3, 0) = measurement.block<3, 1>(3,0).normalized()*10;
+    normalized_measurement_.block<3, 1>(3, 0) = measurement.block<3, 1>(3,0).normalized()*10.0F;
 
     // de-bias the gyro measurement
     normalized_measurement_.block<3,1>(6, 0) =  measurement.block<3, 1>(6, 0) - gyro_bias_;
