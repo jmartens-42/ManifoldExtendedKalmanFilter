@@ -4,9 +4,9 @@
 
 Eigen::Quaternionf AttitudeKalman9Dof::inverseChart(const Eigen::Vector<float, 3>& e){
 
-    auto multiplier = 1/(sqrtf(4 + e.squaredNorm()));
+    float multiplier = 1.f/(sqrtf(4.f + e.squaredNorm()));
     Eigen::Vector<float, 3> scaled_e = multiplier*e;
-    return Eigen::Quaternionf(multiplier*2, scaled_e.x(), scaled_e.y(), scaled_e.z()).normalized();
+    return Eigen::Quaternionf(multiplier*2.f, scaled_e.x(), scaled_e.y(), scaled_e.z()).normalized();
 }
 
 
@@ -54,8 +54,8 @@ void AttitudeKalman9Dof::calibrationStep(const Eigen::Vector<float, 9>& measurem
 
         case CalibrationStep::SensorBaseline:
 
-            accel_temp += measurement.block<3, 1>(0,0).normalized()*10;
-            mag_temp += measurement.block<3, 1>(3,0).normalized()*10;
+            accel_temp += measurement.block<3, 1>(0,0).normalized()*10.f;
+            mag_temp += measurement.block<3, 1>(3,0).normalized()*10.f;
             gyro_temp += measurement.block<3, 1>(6,0);
 
             sample_count++;
@@ -78,7 +78,6 @@ void AttitudeKalman9Dof::calibrationStep(const Eigen::Vector<float, 9>& measurem
         default:
             break;
     }
-
 
 }
 
