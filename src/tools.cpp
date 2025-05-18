@@ -8,7 +8,7 @@ Eigen::Matrix<float, 3, 3> crossProdMat(const Eigen::Vector<float, 3>& v){
             v(2), 0, -1*v(0),
             -1*v(1), v(0), 0;
 
-    
+
     return m;
 
 }

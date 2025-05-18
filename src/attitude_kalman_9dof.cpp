@@ -17,7 +17,7 @@ Eigen::Vector<float, 3> AttitudeKalman9Dof::chart(const Eigen::Quaternionf& q){
 }
 
 
-RotationalState AttitudeKalman9Dof::step(const Eigen::Vector<float, 9>& measurement, const Eigen::Vector<float, 3>& expected_worldframe_acceleration_disturbance, float dt){    
+RotationalState AttitudeKalman9Dof::step(const Eigen::Vector<float, 9>& measurement, const Eigen::Vector<float, 3>& expected_worldframe_acceleration_disturbance, float dt){
 
     if(calibrated_){
 
@@ -100,7 +100,7 @@ void AttitudeKalman9Dof::PredictState(float dt){
 
     // F rotates P into current prediction frame
     Eigen::Matrix<float, 6, 6> F;
-    F << rotation_estimate.toRotationMatrix().transpose(), (Eigen::Matrix<float, 3, 3>::Identity()*dt), 
+    F << rotation_estimate.toRotationMatrix().transpose(), (Eigen::Matrix<float, 3, 3>::Identity()*dt),
          Eigen::Matrix<float, 3, 3>::Zero(), Eigen::Matrix<float, 3, 3>::Identity();
 
     // Qn is process noise (how much do we trust the prediction?)
@@ -149,7 +149,7 @@ void AttitudeKalman9Dof::updateEstimate(const Eigen::Vector<float, 9>& measureme
     // normalize the accelerometer measurement
     normalized_measurement_.block<3, 1>(0, 0) = measurement.block<3, 1>(0, 0).normalized()*10.0F;
 
-    // normalize the mag measurement 
+    // normalize the mag measurement
     normalized_measurement_.block<3, 1>(3, 0) = measurement.block<3, 1>(3,0).normalized()*10.0F;
 
     // de-bias the gyro measurement
@@ -163,6 +163,6 @@ void AttitudeKalman9Dof::updateEstimate(const Eigen::Vector<float, 9>& measureme
 
     // update attitude estimate from euclidian state estimate
     current_estimate_.attitude = (current_prediction_.attitude * inverseChart(euclidian_estimate_.head(3))).normalized();
-    current_estimate_.angular_velocity =  normalized_measurement_.block<3,1>(6, 0); //euclidian_estimate_.tail<3>(); 
+    current_estimate_.angular_velocity =  normalized_measurement_.block<3,1>(6, 0); //euclidian_estimate_.tail<3>();
 
 }

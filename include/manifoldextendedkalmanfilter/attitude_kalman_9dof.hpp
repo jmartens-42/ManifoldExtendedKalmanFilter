@@ -7,7 +7,7 @@ class AttitudeKalman9Dof{
 
 public:
 
-    AttitudeKalman9Dof(): 
+    AttitudeKalman9Dof():
                           expected_measurement_(Eigen::Vector<float, 9>::Zero()),
                           P_(Eigen::Matrix<float, 6, 6>::Identity()*10),
                           H_(Eigen::Matrix<float, 9, 6>::Zero()),
@@ -37,8 +37,8 @@ public:
 
     std::string getDebugString(){
         return std::string() + "expected: " + std::to_string(expected_measurement_[0]) + " " + std::to_string(expected_measurement_[1]) + " " + std::to_string(expected_measurement_[2]) + " " + std::to_string(expected_measurement_.block<3,1>(0,0).norm()) +
-                                " actual: " + std::to_string(normalized_measurement_.block<3, 1>(0, 0)[0]) + " " + std::to_string(normalized_measurement_.block<3, 1>(0, 0)[1]) + " " + std::to_string(normalized_measurement_.block<3, 1>(0, 0)[2]) + " " + std::to_string(normalized_measurement_.block<3, 1>(0, 0).norm()) + 
-                                " expected: " + std::to_string(expected_measurement_[3]) + " " + std::to_string(expected_measurement_[4]) + " " + std::to_string(expected_measurement_[5]) + " " + std::to_string(expected_measurement_.block<3,1>(3,0).norm())+ 
+                                " actual: " + std::to_string(normalized_measurement_.block<3, 1>(0, 0)[0]) + " " + std::to_string(normalized_measurement_.block<3, 1>(0, 0)[1]) + " " + std::to_string(normalized_measurement_.block<3, 1>(0, 0)[2]) + " " + std::to_string(normalized_measurement_.block<3, 1>(0, 0).norm()) +
+                                " expected: " + std::to_string(expected_measurement_[3]) + " " + std::to_string(expected_measurement_[4]) + " " + std::to_string(expected_measurement_[5]) + " " + std::to_string(expected_measurement_.block<3,1>(3,0).norm())+
                                 " actual: " + std::to_string(normalized_measurement_.block<3,1>(3, 0)[0]) + " " + std::to_string(normalized_measurement_.block<3,1>(3, 0)[1]) + " " + std::to_string(normalized_measurement_.block<3,1>(3, 0)[2]) + " " + std::to_string(normalized_measurement_.block<3,1>(3, 0).norm()) + "\n\r";
 
     }
@@ -96,7 +96,7 @@ private:
     Eigen::Matrix<float, 6, 6> P_; //state covariance matrix
     Eigen::Matrix<float, 9, 6> H_; // state -> measurement transformation matrix
     Eigen::Matrix<float, 9, 9> S_; // measurement covariance matrix
-    Eigen::Matrix<float, 6, 9> K_; // Kalman gain matrix 
+    Eigen::Matrix<float, 6, 9> K_; // Kalman gain matrix
 
     Eigen::Matrix<float, 3, 3> Q_w_;   //process covariance - how much do we trust the dynamical model
     Eigen::Matrix<float, 3, 3> Q_a_m_; //covariance representing external disturbances
@@ -109,9 +109,9 @@ private:
     Eigen::Vector<float, 3> world_frame_acc_; // this is what measurement predictions are made off of
     Eigen::Vector<float, 3> gyro_bias_;
     Eigen::Vector<float, 3> world_frame_mag_; // this is what measurement predictions are made off of
-   
+
     const Eigen::Vector<float, 3> expected_mag_disturbance_; // just zero for now. Not sure how this would get implemented dynamically
-    
+
     RotationalState current_prediction_; // used in the step logic
     RotationalState current_estimate_; // actual output
 
