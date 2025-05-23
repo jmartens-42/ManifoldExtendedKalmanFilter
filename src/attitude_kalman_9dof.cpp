@@ -1,8 +1,6 @@
 #include <manifoldextendedkalmanfilter/attitude_kalman_9dof.hpp>
 #include <manifoldextendedkalmanfilter/tools.hpp>
 
-#include <iostream>
-
 Eigen::Quaternionf AttitudeKalman9Dof::inverseChart(const Eigen::Vector<float, 3>& e){
 
     float multiplier = 1.f/(sqrtf(4.f + e.squaredNorm()));
@@ -32,8 +30,6 @@ RotationalState AttitudeKalman9Dof::step(const Eigen::Vector<float, 9>& measurem
         calibrationStep(measurement);
     }
 
-    // std::cout << "world frame acc: " << world_frame_acc_.transpose() << "\n\r";
-    std::cout << getDebugString() << "\n\r";
     return current_estimate_;
 
 }
@@ -57,7 +53,6 @@ void AttitudeKalman9Dof::calibrationStep(const Eigen::Vector<float, 9>& measurem
 
         case CalibrationStep::SensorBaseline:
 
-            std::cout << "calibrating: " << measurement.transpose() << "\n\r";
             accel_temp += measurement.block<3, 1>(0,0).normalized()*10.f;
             mag_temp += measurement.block<3, 1>(3,0).normalized()*10.f;
             gyro_temp += measurement.block<3, 1>(6,0);
@@ -65,7 +60,6 @@ void AttitudeKalman9Dof::calibrationStep(const Eigen::Vector<float, 9>& measurem
             sample_count++;
             if(sample_count > 50){
                 world_frame_acc_ = accel_temp / 50.0;
-                std::cout << "calibrated: " << world_frame_acc_.transpose() << "\n\r";
                 gyro_bias_ = gyro_temp / 50.0;
                 world_frame_mag_ = mag_temp / 50.0;
                 cal_step_ = CalibrationStep::Complete;
@@ -160,6 +154,7 @@ void AttitudeKalman9Dof::updateEstimate(const Eigen::Vector<float, 9>& measureme
     // update estimate covariance
     P_ = (Eigen::Matrix<float, 6, 6>::Identity() - K_ * H_) * P_;
 
+    // std::cout << "estimate angular " << euclidian_estimate_.tail<3>() << std::endl;
     // update attitude estimate from euclidian state estimate
     current_estimate_.attitude = (inverseChart(euclidian_estimate_.head(3)) * current_prediction_.attitude ).normalized();
     current_estimate_.angular_velocity =  normalized_measurement_.block<3,1>(6, 0); //euclidian_estimate_.tail<3>();
